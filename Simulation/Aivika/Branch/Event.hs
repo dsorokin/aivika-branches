@@ -185,19 +185,20 @@ futureEvent :: Double -> Event Br a -> Event Br (Maybe a)
 futureEvent t (Event m) =
   Event $ \p ->
   Br $ \ps ->
-  if brLevel ps >= brMaxLevel ps
-  then return Nothing
-  else do p2  <- clonePoint p
-          ps2 <- newBrParams ps
-          let sc = pointSpecs p
-              t0 = spcStartTime sc
-              dt = spcDT sc
-              n  = fromIntegral $ floor ((t - t0) / dt)
-          a <- invokeBr ps $
-               m $ p2 { pointTime = t,
-                        pointIteration = n,
-                        pointPhase = -1 }
-          return (Just a)
+  let sc = pointSpecs p
+      t0 = spcStartTime sc
+      t' = spcStopTime sc
+      dt = spcDT sc
+      n  = fromIntegral $ floor ((t - t0) / dt)
+  in if (brLevel ps >= brMaxLevel ps) || (t > t')
+     then return Nothing
+     else do p2  <- clonePoint p
+             ps2 <- newBrParams ps
+             a <- invokeBr ps $
+                  m $ p2 { pointTime = t,
+                           pointIteration = n,
+                           pointPhase = -1 }
+             return (Just a)
 
 -- | Clone the point.
 clonePoint :: Point Br -> IO (Point Br)
