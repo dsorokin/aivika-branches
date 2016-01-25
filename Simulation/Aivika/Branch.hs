@@ -11,6 +11,14 @@
 --
 module Simulation.Aivika.Branch
        (-- * Modules
-        module Simulation.Aivika.Branch.Ref.Base) where
+        module Simulation.Aivika.Branch.Event,
+        module Simulation.Aivika.Branch.Ref.Base,
+        -- * Branches
+        Br,
+        runBr,
+        branchLevel,
+        branchMaxLevel) where
 
+import Simulation.Aivika.Branch.Internal.Branch
+import Simulation.Aivika.Branch.Event
 import Simulation.Aivika.Branch.Ref.Base

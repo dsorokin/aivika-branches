@@ -42,6 +42,7 @@ instance MonadRef Br where
   {-# INLINE equalRef #-}
   equalRef (Ref r1) (Ref r2) = (r1 == r2)
 
+-- | A subtype of mutable references that can be created under more weak conditions.
 instance MonadRef0 Br where
 
   {-# INLINE newRef0 #-}

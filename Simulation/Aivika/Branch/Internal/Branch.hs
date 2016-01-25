@@ -15,7 +15,9 @@ module Simulation.Aivika.Branch.Internal.Branch
         invokeBr,
         runBr,
         newBrParams,
-        newRootBrParams) where
+        newRootBrParams,
+        branchLevel,
+        branchMaxLevel) where
 
 import Data.IORef
 import Data.Maybe
@@ -118,3 +120,11 @@ newRootBrParams maxLevel =
                        brMaxLevel = maxLevel,
                        brParent = Nothing
                      }
+
+-- | Return the current branch level starting from 1.
+branchLevel :: Br Int
+branchLevel = Br $ \ps -> return (brLevel ps)
+
+-- | Return the maximum possible branch level. 
+branchMaxLevel :: Br Int
+branchMaxLevel = Br $ \ps -> return (brMaxLevel ps)

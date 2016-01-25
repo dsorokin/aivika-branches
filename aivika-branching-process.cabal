@@ -20,6 +20,7 @@ tested-with:     GHC == 7.10.3
 library
 
     exposed-modules: Simulation.Aivika.Branch
+                     Simulation.Aivika.Branch.Event
                      Simulation.Aivika.Branch.Ref.Base
 
     other-modules:   Simulation.Aivika.Branch.Internal.Branch
