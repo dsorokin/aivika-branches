@@ -194,13 +194,13 @@ futureEvent t (Event m) =
      then return Nothing
      else do p2  <- clonePoint p
              ps2 <- newBrParams ps
-             a <- invokeBr ps $
-                  m $ p2 { pointTime = t,
-                           pointIteration = n,
-                           pointPhase = -1 }
+             a   <- invokeBr ps $
+                    m $ p2 { pointTime = t,
+                             pointIteration = n,
+                             pointPhase = -1 }
              return (Just a)
 
--- | Clone the point.
+-- | Clone the time point.
 clonePoint :: Point Br -> IO (Point Br)
 clonePoint p =
   do let r = pointRun p
