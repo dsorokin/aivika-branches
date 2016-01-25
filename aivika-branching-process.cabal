@@ -1,0 +1,43 @@
+name:            aivika-branching-process
+version:         0.1
+synopsis:        Branching processes for the Aivika simulation library
+description:
+    This package extends the Aivika library with facilities for creating branches to forecast 
+    the future behavior of the model within simulation. For example, it can be useful for 
+    financial modeling.
+    .
+category:        Simulation
+license:         BSD3
+license-file:    LICENSE
+copyright:       (c) 2016. David Sorokin <david.sorokin@gmail.com>
+author:          David Sorokin
+maintainer:      David Sorokin <david.sorokin@gmail.com>
+homepage:        http://www.aivikasoft.com/en/products/aivika.html
+cabal-version:   >= 1.6
+build-type:      Simple
+tested-with:     GHC == 7.10.3
+
+library
+
+    exposed-modules: Simulation.Aivika.Branch
+                     Simulation.Aivika.Branch.Ref.Base
+
+    other-modules:   Simulation.Aivika.Branch.Internal.Branch
+                     Simulation.Aivika.Branch.Internal.Ref
+
+    build-depends:   base >= 3 && < 6,
+                     mtl >= 2.1.1,
+                     containers >= 0.4.0.0,
+                     random >= 1.0.0.3,
+                     aivika >= 4.3.2,
+                     aivika-transformers >= 4.3.1
+
+    extensions:      TypeFamilies,
+                     BangPatterns
+
+    ghc-options:     -O2
+
+source-repository head
+
+    type:     git
+    location: https://github.com/dsorokin/aivika-branching-process
