@@ -9,7 +9,7 @@
 -- Stability  : experimental
 -- Tested with: GHC 7.10.3
 --
--- The module defines an event queue.
+-- The module defines an event queue and basic functions for branching computations.
 --
 module Simulation.Aivika.Branch.Event
        (branchEvent,
