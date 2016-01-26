@@ -1,6 +1,6 @@
-name:            aivika-branching-process
+name:            aivika-branches
 version:         0.1
-synopsis:        Branching processes for the Aivika simulation library
+synopsis:        Branches for the Aivika simulation library
 description:
     This package extends the Aivika library with facilities for creating branches to forecast 
     the future behavior of the model within simulation. For example, it can be useful for 
@@ -41,4 +41,4 @@ library
 source-repository head
 
     type:     git
-    location: https://github.com/dsorokin/aivika-branching-process
+    location: https://github.com/dsorokin/aivika-branches
