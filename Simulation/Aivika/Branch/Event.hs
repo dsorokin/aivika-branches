@@ -14,7 +14,8 @@
 module Simulation.Aivika.Branch.Event
        (branchEvent,
         branchEventParallel,
-        futureEvent) where
+        futureEvent,
+        futureEventWith) where
 
 import Data.IORef
 
@@ -182,7 +183,11 @@ branchEventParallel ms =
 -- If either the branch level exceeds 'branchMaxLevel' or the specified time is greater
 -- than 'stoptime' then 'Nothing' is returned.
 futureEvent :: Double -> Event Br a -> Event Br (Maybe a)
-futureEvent t (Event m) =
+futureEvent = futureEventWith CurrentEvents
+
+-- | Like 'futureEvent' but allows specifying how the pending events must be processed.
+futureEventWith :: EventProcessing -> Double -> Event Br a -> Event Br (Maybe a)
+futureEventWith processing t (Event m) =
   Event $ \p ->
   Br $ \ps ->
   let sc = pointSpecs p
@@ -194,10 +199,13 @@ futureEvent t (Event m) =
      then return Nothing
      else do p2  <- clonePoint p
              ps2 <- newBrParams ps
-             a   <- invokeBr ps $
-                    m $ p2 { pointTime = t,
-                             pointIteration = n,
-                             pointPhase = -1 }
+             let p2' = p2 { pointTime = t,
+                            pointIteration = n,
+                            pointPhase = -1 }
+             invokeBr ps2 $
+               invokeDynamics p2' $
+               processEvents processing
+             a <- invokeBr ps2 (m p2')
              return (Just a)
 
 -- | Clone the time point.
