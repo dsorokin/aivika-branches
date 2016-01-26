@@ -143,7 +143,7 @@ processEvents EarlierEventsOrFromPast = processEventsIncludingEarlierCore
 
 -- | Branch a new computation and return its result leaving the current computation intact.
 --
--- A new derivative branch with 'brancLevel' increased by 1 is created at the current modeling time.
+-- A new derivative branch with 'branchLevel' increased by 1 is created at the current modeling time.
 -- Then the result of the specified computation for the derivative branch is returned.
 --
 -- The state of the current computation including its event queue and mutable references 'Ref'
