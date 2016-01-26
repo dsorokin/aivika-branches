@@ -16,8 +16,7 @@ module Simulation.Aivika.Branch
         -- * Branches
         Br,
         runBr,
-        branchLevel,
-        branchMaxLevel) where
+        branchLevel) where
 
 import Simulation.Aivika.Branch.Internal.Branch
 import Simulation.Aivika.Branch.Event

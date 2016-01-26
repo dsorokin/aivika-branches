@@ -13,7 +13,6 @@
 --
 module Simulation.Aivika.Branch.Event
        (branchEvent,
-        branchEventParallel,
         futureEvent,
         futureEventWith) where
 
@@ -144,69 +143,52 @@ processEvents EarlierEventsOrFromPast = processEventsIncludingEarlierCore
 
 -- | Branch a new computation and return its result leaving the current computation intact.
 --
--- A new derivative branch with level increased by 1 is created at the current modeling time.
+-- A new derivative branch with 'brancLevel' increased by 1 is created at the current modeling time.
 -- Then the result of the specified computation for the derivative branch is returned.
 --
--- If the branch level exceeds 'branchMaxLevel' then 'Nothing' is returned.
-branchEvent :: Event Br a -> Event Br (Maybe a)
+-- The state of the current computation including its event queue and mutable references 'Ref'
+-- remain intact. In some sense we copy the state of the model to the derivative branch and then
+-- proceed with the derived simulation. The copying operation is relatively cheap.
+branchEvent :: Event Br a -> Event Br a
 branchEvent (Event m) =
   Event $ \p ->
   Br $ \ps->
-  if brLevel ps >= brMaxLevel ps
-  then return Nothing
-  else do p2  <- clonePoint p
-          ps2 <- newBrParams ps
-          a   <- invokeBr ps2 (m p2)
-          return (Just a)
-
--- | Like 'branchEvent' but allows creating multiple derivative branches.
-branchEventParallel :: [Event Br a] -> Event Br (Maybe [a])
-branchEventParallel ms =
-  Event $ \p ->
-  Br $ \ps ->
-  if brLevel ps >= brMaxLevel ps
-  then return Nothing
-  else do as <-
-            forM ms $ \(Event m) ->
-            do p2  <- clonePoint p
-               ps2 <- newBrParams ps
-               invokeBr ps2 (m p2)
-          return (Just as)
+  do p2  <- clonePoint p
+     ps2 <- newBrParams ps
+     invokeBr ps2 (m p2)
 
 -- | Branch a new computation and return its result at the desired time
 -- in the future leaving the current computation intact.
 --
--- A new derivative branch with level increased by 1 is created at the current modeling time.
+-- A new derivative branch with 'branchLevel' increased by 1 is created at the current modeling time.
 -- All pending events are processed till the specified time for that new branch. Then the result
 -- of the specified computation for the derivative branch is returned.
 --
--- If either the branch level exceeds 'branchMaxLevel' or the specified time is greater
--- than 'stoptime' then 'Nothing' is returned.
-futureEvent :: Double -> Event Br a -> Event Br (Maybe a)
+-- The state of the current computation including its event queue and mutable references 'Ref'
+-- remain intact. In some sense we copy the state of the model to the derivative branch and then
+-- proceed with the derived simulation. The copying operation is relatively cheap.
+futureEvent :: Double -> Event Br a -> Event Br a
 futureEvent = futureEventWith CurrentEvents
 
 -- | Like 'futureEvent' but allows specifying how the pending events must be processed.
-futureEventWith :: EventProcessing -> Double -> Event Br a -> Event Br (Maybe a)
+futureEventWith :: EventProcessing -> Double -> Event Br a -> Event Br a
 futureEventWith processing t (Event m) =
   Event $ \p ->
   Br $ \ps ->
-  let sc = pointSpecs p
-      t0 = spcStartTime sc
-      t' = spcStopTime sc
-      dt = spcDT sc
-      n  = fromIntegral $ floor ((t - t0) / dt)
-  in if (brLevel ps >= brMaxLevel ps) || (t > t')
-     then return Nothing
-     else do p2  <- clonePoint p
-             ps2 <- newBrParams ps
-             let p2' = p2 { pointTime = t,
-                            pointIteration = n,
-                            pointPhase = -1 }
-             invokeBr ps2 $
-               invokeDynamics p2' $
-               processEvents processing
-             a <- invokeBr ps2 (m p2')
-             return (Just a)
+  do p2  <- clonePoint p
+     ps2 <- newBrParams ps
+     let sc = pointSpecs p
+         t0 = spcStartTime sc
+         t' = spcStopTime sc
+         dt = spcDT sc
+         n  = fromIntegral $ floor ((t - t0) / dt)
+         p' = p2 { pointTime = t,
+                   pointIteration = n,
+                   pointPhase = -1 }
+     invokeBr ps2 $
+       invokeDynamics p' $
+       processEvents processing
+     invokeBr ps2 (m p')
 
 -- | Clone the time point.
 clonePoint :: Point Br -> IO (Point Br)

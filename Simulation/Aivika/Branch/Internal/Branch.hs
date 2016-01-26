@@ -16,8 +16,7 @@ module Simulation.Aivika.Branch.Internal.Branch
         runBr,
         newBrParams,
         newRootBrParams,
-        branchLevel,
-        branchMaxLevel) where
+        branchLevel) where
 
 import Data.IORef
 import Data.Maybe
@@ -42,8 +41,6 @@ data BrParams =
              -- ^ The generator of identifiers.
              brLevel :: !Int,
              -- ^ The branch level.
-             brMaxLevel :: !Int,
-             -- ^ The maximum possible branch level.
              brParent :: Maybe BrParams
              -- ^ The branch parent.
            }
@@ -92,10 +89,10 @@ invokeBr :: BrParams -> Br a -> IO a
 {-# INLINE invokeBr #-}
 invokeBr ps (Br m) = m ps
 
--- | Run the branching computation specifying the maximum possible branch level.
-runBr :: Br a -> Int -> IO a
-runBr m maxLevel =
-  do ps <- newRootBrParams maxLevel
+-- | Run the branching computation.
+runBr :: Br a -> IO a
+runBr m =
+  do ps <- newRootBrParams
      unBr m ps
 
 -- | Create a new child branch.
@@ -107,24 +104,18 @@ newBrParams ps =
      return BrParams { brId = id,
                        brIdGenerator = brIdGenerator ps,
                        brLevel = level `seq` level,
-                       brMaxLevel = brMaxLevel ps,
                        brParent = Just ps }
 
--- | Create a root branch with the specified maximum possible level.
-newRootBrParams :: Int -> IO BrParams
-newRootBrParams maxLevel =
+-- | Create a root branch.
+newRootBrParams :: IO BrParams
+newRootBrParams =
   do genId <- newIORef 0
      return BrParams { brId = 0,
                        brIdGenerator = genId,
                        brLevel = 1,
-                       brMaxLevel = maxLevel,
                        brParent = Nothing
                      }
 
 -- | Return the current branch level starting from 1.
 branchLevel :: Br Int
 branchLevel = Br $ \ps -> return (brLevel ps)
-
--- | Return the maximum possible branch level. 
-branchMaxLevel :: Br Int
-branchMaxLevel = Br $ \ps -> return (brMaxLevel ps)
