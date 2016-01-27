@@ -14,7 +14,7 @@ module Simulation.Aivika.Branch
         module Simulation.Aivika.Branch.Event,
         module Simulation.Aivika.Branch.Ref.Base,
         -- * Branches
-        Br,
+        BrIO,
         runBr,
         branchLevel) where
 

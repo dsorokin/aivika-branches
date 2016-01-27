@@ -47,11 +47,11 @@ instance Eq (Ref a) where
   r1 == r2 = (refMap r1) == (refMap r2)
 
 -- | Create an empty reference.
-newEmptyRef :: Simulation Br (Ref a)
+newEmptyRef :: Simulation BrIO (Ref a)
 newEmptyRef = Simulation $ const newEmptyRef0
 
 -- | Create an empty reference.
-newEmptyRef0 :: Br (Ref a)
+newEmptyRef0 :: BrIO (Ref a)
 newEmptyRef0 =
   Br $ \ps ->
   do rm <- newIORef M.empty
@@ -62,11 +62,11 @@ newEmptyRef0 =
                   refWeakMap = wm }
 
 -- | Create a new reference.
-newRef :: a -> Simulation Br (Ref a)
+newRef :: a -> Simulation BrIO (Ref a)
 newRef = Simulation . const . newRef0
 
 -- | Create a new reference.
-newRef0 :: a -> Br (Ref a)
+newRef0 :: a -> BrIO (Ref a)
 newRef0 a =
   Br $ \ps ->
   do r  <- invokeBr ps newEmptyRef0
@@ -79,7 +79,7 @@ newRef0 a =
      return r
      
 -- | Read the value of a reference.
-readRef :: Ref a -> Event Br a
+readRef :: Ref a -> Event BrIO a
 readRef r =
   Event $ \p ->
   Br $ \ps ->
@@ -98,7 +98,7 @@ readRef r =
      loop ps
 
 -- | Write a new value into the reference.
-writeRef :: Ref a -> a -> Event Br ()
+writeRef :: Ref a -> a -> Event BrIO ()
 writeRef r a =
   Event $ \p ->
   Br $ \ps ->
@@ -118,7 +118,7 @@ writeRef r a =
               let m' = M.insert i wa m in (m', ())
 
 -- | Mutate the contents of the reference.
-modifyRef :: Ref a -> (a -> a) -> Event Br ()
+modifyRef :: Ref a -> (a -> a) -> Event BrIO ()
 modifyRef r f =
   Event $ \p ->
   Br $ \ps ->

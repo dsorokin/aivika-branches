@@ -22,10 +22,10 @@ import Simulation.Aivika.Branch.Internal.Branch
 import qualified Simulation.Aivika.Branch.Internal.Ref as R
 
 -- | The implementation of mutable references.
-instance MonadRef Br where
+instance MonadRef BrIO where
 
   -- | The mutable reference.
-  newtype Ref Br a = Ref { refValue :: R.Ref a }
+  newtype Ref BrIO a = Ref { refValue :: R.Ref a }
 
   {-# INLINE newRef #-}
   newRef = fmap Ref . R.newRef 
@@ -43,7 +43,7 @@ instance MonadRef Br where
   equalRef (Ref r1) (Ref r2) = (r1 == r2)
 
 -- | A subtype of mutable references that can be created under more weak conditions.
-instance MonadRef0 Br where
+instance MonadRef0 BrIO where
 
   {-# INLINE newRef0 #-}
   newRef0 = fmap Ref . R.newRef0

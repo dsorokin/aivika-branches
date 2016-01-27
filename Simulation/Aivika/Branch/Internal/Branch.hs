@@ -11,7 +11,7 @@
 --
 module Simulation.Aivika.Branch.Internal.Branch
        (BrParams(..),
-        Br(..),
+        BrIO(..),
         invokeBr,
         runBr,
         newBrParams,
@@ -29,9 +29,9 @@ import Control.Exception (throw, catch, finally)
 import Simulation.Aivika.Trans.Exception
 
 -- | The branching computation.
-newtype Br a = Br { unBr :: BrParams -> IO a
+newtype BrIO a = Br { unBr :: BrParams -> IO a
                       -- ^ Unwrap the computation.
-                  }
+                    }
 
 -- | The parameters of the computation.
 data BrParams =
@@ -45,7 +45,7 @@ data BrParams =
              -- ^ The branch parent.
            }
 
-instance Monad Br where
+instance Monad BrIO where
 
   {-# INLINE return #-}
   return = Br . const . return
@@ -55,7 +55,7 @@ instance Monad Br where
     m ps >>= \a ->
     let m' = unBr (k a) in m' ps
 
-instance Applicative Br where
+instance Applicative BrIO where
 
   {-# INLINE pure #-}
   pure = return
@@ -63,17 +63,17 @@ instance Applicative Br where
   {-# INLINE (<*>) #-}
   (<*>) = ap
 
-instance Functor Br where
+instance Functor BrIO where
 
   {-# INLINE fmap #-}
   fmap f (Br m) = Br $ fmap f . m 
 
-instance MonadIO Br where
+instance MonadIO BrIO where
 
   {-# INLINE liftIO #-}
   liftIO = Br . const . liftIO
 
-instance MonadException Br where
+instance MonadException BrIO where
 
   catchComp (Br m) h = Br $ \ps ->
     catch (m ps) (\e -> unBr (h e) ps)
@@ -85,12 +85,12 @@ instance MonadException Br where
     throw e
 
 -- | Invoke the computation.
-invokeBr :: BrParams -> Br a -> IO a
+invokeBr :: BrParams -> BrIO a -> IO a
 {-# INLINE invokeBr #-}
 invokeBr ps (Br m) = m ps
 
 -- | Run the branching computation.
-runBr :: Br a -> IO a
+runBr :: BrIO a -> IO a
 runBr m =
   do ps <- newRootBrParams
      unBr m ps
@@ -117,5 +117,5 @@ newRootBrParams =
                      }
 
 -- | Return the current branch level starting from 1.
-branchLevel :: Br Int
+branchLevel :: BrIO Int
 branchLevel = Br $ \ps -> return (brLevel ps)

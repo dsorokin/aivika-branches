@@ -29,11 +29,11 @@ import Simulation.Aivika.Trans.Internal.Types
 import Simulation.Aivika.Branch.Internal.Branch
 
 -- | An implementation of the 'EventQueueing' type class.
-instance EventQueueing Br where
+instance EventQueueing BrIO where
 
   -- | The event queue type.
-  data EventQueue Br =
-    EventQueue { queuePQ :: IORef (PQ.PriorityQueue (Point Br -> Br ())),
+  data EventQueue BrIO =
+    EventQueue { queuePQ :: IORef (PQ.PriorityQueue (Point BrIO -> BrIO ())),
                  -- ^ the underlying priority queue
                  queueBusy :: IORef Bool,
                  -- ^ whether the queue is currently processing events
@@ -67,7 +67,7 @@ instance EventQueueing Br where
     in fmap PQ.queueCount $ readIORef pq
 
 -- | Process the pending events.
-processPendingEventsCore :: Bool -> Dynamics Br ()
+processPendingEventsCore :: Bool -> Dynamics BrIO ()
 processPendingEventsCore includingCurrentEvents = Dynamics r where
   r p =
     Br $ \ps ->
@@ -103,7 +103,7 @@ processPendingEventsCore includingCurrentEvents = Dynamics r where
                  call q p ps
 
 -- | Process the pending events synchronously, i.e. without past.
-processPendingEvents :: Bool -> Dynamics Br ()
+processPendingEvents :: Bool -> Dynamics BrIO ()
 processPendingEvents includingCurrentEvents = Dynamics r where
   r p =
     Br $ \ps ->
@@ -119,23 +119,23 @@ processPendingEvents includingCurrentEvents = Dynamics r where
               processPendingEventsCore includingCurrentEvents
 
 -- | A memoized value.
-processEventsIncludingCurrent :: Dynamics Br ()
+processEventsIncludingCurrent :: Dynamics BrIO ()
 processEventsIncludingCurrent = processPendingEvents True
 
 -- | A memoized value.
-processEventsIncludingEarlier :: Dynamics Br ()
+processEventsIncludingEarlier :: Dynamics BrIO ()
 processEventsIncludingEarlier = processPendingEvents False
 
 -- | A memoized value.
-processEventsIncludingCurrentCore :: Dynamics Br ()
+processEventsIncludingCurrentCore :: Dynamics BrIO ()
 processEventsIncludingCurrentCore = processPendingEventsCore True
 
 -- | A memoized value.
-processEventsIncludingEarlierCore :: Dynamics Br ()
+processEventsIncludingEarlierCore :: Dynamics BrIO ()
 processEventsIncludingEarlierCore = processPendingEventsCore True
 
 -- | Process the events.
-processEvents :: EventProcessing -> Dynamics Br ()
+processEvents :: EventProcessing -> Dynamics BrIO ()
 processEvents CurrentEvents = processEventsIncludingCurrent
 processEvents EarlierEvents = processEventsIncludingEarlier
 processEvents CurrentEventsOrFromPast = processEventsIncludingCurrentCore
@@ -149,7 +149,7 @@ processEvents EarlierEventsOrFromPast = processEventsIncludingEarlierCore
 -- The state of the current computation including its event queue and mutable references 'Ref'
 -- remain intact. In some sense we copy the state of the model to the derivative branch and then
 -- proceed with the derived simulation. The copying operation is relatively cheap.
-branchEvent :: Event Br a -> Event Br a
+branchEvent :: Event BrIO a -> Event BrIO a
 branchEvent (Event m) =
   Event $ \p ->
   Br $ \ps->
@@ -167,11 +167,11 @@ branchEvent (Event m) =
 -- The state of the current computation including its event queue and mutable references 'Ref'
 -- remain intact. In some sense we copy the state of the model to the derivative branch and then
 -- proceed with the derived simulation. The copying operation is relatively cheap.
-futureEvent :: Double -> Event Br a -> Event Br a
+futureEvent :: Double -> Event BrIO a -> Event BrIO a
 futureEvent = futureEventWith CurrentEvents
 
 -- | Like 'futureEvent' but allows specifying how the pending events must be processed.
-futureEventWith :: EventProcessing -> Double -> Event Br a -> Event Br a
+futureEventWith :: EventProcessing -> Double -> Event BrIO a -> Event BrIO a
 futureEventWith processing t (Event m) =
   Event $ \p ->
   Br $ \ps ->
@@ -193,7 +193,7 @@ futureEventWith processing t (Event m) =
      invokeBr ps2 (m p')
 
 -- | Clone the time point.
-clonePoint :: Point Br -> IO (Point Br)
+clonePoint :: Point BrIO -> IO (Point BrIO)
 clonePoint p =
   do let r = pointRun p
          q = runEventQueue r
