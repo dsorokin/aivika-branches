@@ -1,6 +1,6 @@
 
 -- |
--- Module     : Simulation.Aivika.Branch.Internal.Branch
+-- Module     : Simulation.Aivika.Branch.Internal.Br
 -- Copyright  : Copyright (c) 2016, David Sorokin <david.sorokin@gmail.com>
 -- License    : BSD3
 -- Maintainer : David Sorokin <david.sorokin@gmail.com>
@@ -9,7 +9,7 @@
 --
 -- This module defines a branching computation.
 --
-module Simulation.Aivika.Branch.Internal.Branch
+module Simulation.Aivika.Branch.Internal.Br
        (BrParams(..),
         BrIO(..),
         invokeBr,

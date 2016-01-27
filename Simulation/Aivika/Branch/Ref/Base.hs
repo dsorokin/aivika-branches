@@ -18,7 +18,7 @@ import Simulation.Aivika.Trans.Comp
 import Simulation.Aivika.Trans.Simulation
 import Simulation.Aivika.Trans.Ref.Base
 
-import Simulation.Aivika.Branch.Internal.Branch
+import Simulation.Aivika.Branch.Internal.Br
 import qualified Simulation.Aivika.Branch.Internal.Ref as R
 
 -- | The implementation of mutable references.

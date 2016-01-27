@@ -26,7 +26,7 @@ import qualified Simulation.Aivika.PriorityQueue.Pure as PQ
 import Simulation.Aivika.Trans
 import Simulation.Aivika.Trans.Internal.Types
 
-import Simulation.Aivika.Branch.Internal.Branch
+import Simulation.Aivika.Branch.Internal.Br
 
 -- | An implementation of the 'EventQueueing' type class.
 instance EventQueueing BrIO where

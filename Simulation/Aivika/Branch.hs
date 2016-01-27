@@ -18,6 +18,6 @@ module Simulation.Aivika.Branch
         runBr,
         branchLevel) where
 
-import Simulation.Aivika.Branch.Internal.Branch
+import Simulation.Aivika.Branch.Internal.Br
 import Simulation.Aivika.Branch.Event
 import Simulation.Aivika.Branch.Ref.Base

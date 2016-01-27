@@ -31,7 +31,7 @@ import Control.Monad.Trans
 
 import Simulation.Aivika.Trans.Internal.Types
 
-import Simulation.Aivika.Branch.Internal.Branch
+import Simulation.Aivika.Branch.Internal.Br
 
 -- | A reference map.
 type RefMap a = IORef (M.IntMap (Weak (IORef a)))

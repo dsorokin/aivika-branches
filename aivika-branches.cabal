@@ -23,7 +23,7 @@ library
                      Simulation.Aivika.Branch.Event
                      Simulation.Aivika.Branch.Ref.Base
 
-    other-modules:   Simulation.Aivika.Branch.Internal.Branch
+    other-modules:   Simulation.Aivika.Branch.Internal.Br
                      Simulation.Aivika.Branch.Internal.Ref
 
     build-depends:   base >= 3 && < 6,
