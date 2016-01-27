@@ -20,8 +20,10 @@ tested-with:     GHC == 7.10.3
 library
 
     exposed-modules: Simulation.Aivika.Branch
+                     Simulation.Aivika.Branch.Br
                      Simulation.Aivika.Branch.Generator
                      Simulation.Aivika.Branch.Event
+                     Simulation.Aivika.Branch.QueueStrategy
                      Simulation.Aivika.Branch.Ref.Base
 
     other-modules:   Simulation.Aivika.Branch.Internal.Br
@@ -35,6 +37,7 @@ library
                      aivika-transformers >= 4.3.1
 
     extensions:      TypeFamilies,
+                     MultiParamTypeClasses,
                      BangPatterns
 
     ghc-options:     -O2

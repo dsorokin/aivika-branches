@@ -11,15 +11,12 @@
 --
 module Simulation.Aivika.Branch
        (-- * Modules
+        module Simulation.Aivika.Branch.Br,
         module Simulation.Aivika.Branch.Event,
         module Simulation.Aivika.Branch.Generator,
-        module Simulation.Aivika.Branch.Ref.Base,
-        -- * Branches
-        BrIO,
-        runBr,
-        branchLevel) where
+        module Simulation.Aivika.Branch.Ref.Base) where
 
-import Simulation.Aivika.Branch.Internal.Br
+import Simulation.Aivika.Branch.Br
 import Simulation.Aivika.Branch.Generator
 import Simulation.Aivika.Branch.Event
 import Simulation.Aivika.Branch.Ref.Base
