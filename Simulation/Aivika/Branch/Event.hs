@@ -175,7 +175,9 @@ futureEventWith :: EventProcessing -> Double -> Event Br a -> Event Br a
 futureEventWith processing t (Event m) =
   Event $ \p ->
   Br $ \ps ->
-  do p2  <- clonePoint p
+  do when (t < pointTime p) $
+       error "The specified time is less than the current modeling time: futureEventWith"
+     p2  <- clonePoint p
      ps2 <- newBrParams ps
      let sc = pointSpecs p
          t0 = spcStartTime sc
