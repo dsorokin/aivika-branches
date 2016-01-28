@@ -119,11 +119,11 @@ newRootBrParams =
      uniqueRef <- newIORef ()
      return BrParams { brId = 0,
                        brIdGenerator = genId,
-                       brLevel = 1,
+                       brLevel = 0,
                        brParent = Nothing,
                        brUniqueRef = uniqueRef
                      }
 
--- | Return the current branch level starting from 1.
+-- | Return the current branch level starting from 0.
 branchLevel :: BrIO Int
 branchLevel = Br $ \ps -> return (brLevel ps)
