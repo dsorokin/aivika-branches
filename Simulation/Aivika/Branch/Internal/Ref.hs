@@ -21,7 +21,7 @@ module Simulation.Aivika.Branch.Internal.Ref
         writeRef,
         modifyRef) where
 
-import Debug.Trace
+-- import Debug.Trace
 
 import Data.IORef
 import qualified Data.IntMap as M
