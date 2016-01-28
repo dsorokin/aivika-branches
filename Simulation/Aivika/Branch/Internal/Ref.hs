@@ -58,7 +58,7 @@ newEmptyRef0 =
   Br $ \ps ->
   do rm <- newIORef M.empty
      wm <- mkWeakIORef rm $
-           trace "fin newEmptyRef0" $
+           trace ("fin newEmptyRef0: " ++ show (brId ps)) $
            atomicModifyIORef rm $ \m -> (M.empty, ())
      return Ref { refMap = rm,
                   refWeakMap = wm }
@@ -75,7 +75,7 @@ newRef0 a =
      ra <- newIORef a
      let !i  = brId ps
          !wm = refWeakMap r
-     mkWeakIORef (brIdGenerator ps) (trace "fin newIORef0" $ finalizeRef wm i)
+     mkWeakIORef (brUniqueRef ps) (trace ("fin newIORef0: " ++ show i) $ finalizeRef wm i)
      writeIORef (refMap r) $
        M.insert i ra M.empty
      return r
@@ -107,7 +107,7 @@ writeRef r a =
        Nothing ->
          do ra <- a `seq` newIORef a
             let !wm = refWeakMap r
-            mkWeakIORef (brIdGenerator ps) (trace "fin writeRef" $ finalizeRef wm i)
+            mkWeakIORef (brUniqueRef ps) (trace ("fin writeRef: " ++ show i) $ finalizeRef wm i)
             atomicModifyIORef (refMap r) $ \m ->
               let m' = M.insert i ra m in (m', ())
 

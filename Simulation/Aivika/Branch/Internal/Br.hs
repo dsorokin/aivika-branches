@@ -41,8 +41,12 @@ data BrParams =
              -- ^ The generator of identifiers.
              brLevel :: !Int,
              -- ^ The branch level.
-             brParent :: Maybe BrParams
+             brParent :: Maybe BrParams,
              -- ^ The branch parent.
+             brUniqueRef :: IORef ()
+             -- ^ The unique reference to which
+             -- the finalizers are attached to
+             -- be garbage collected.
            }
 
 instance Monad BrIO where
@@ -101,19 +105,23 @@ newBrParams ps =
   do id <- atomicModifyIORef (brIdGenerator ps) $ \a ->
        let b = a + 1 in b `seq` (b, b)
      let level = 1 + brLevel ps
+     uniqueRef <- newIORef ()
      return BrParams { brId = id,
                        brIdGenerator = brIdGenerator ps,
                        brLevel = level `seq` level,
-                       brParent = Just ps }
+                       brParent = Just ps,
+                       brUniqueRef = uniqueRef }
 
 -- | Create a root branch.
 newRootBrParams :: IO BrParams
 newRootBrParams =
   do genId <- newIORef 0
+     uniqueRef <- newIORef ()
      return BrParams { brId = 0,
                        brIdGenerator = genId,
                        brLevel = 1,
-                       brParent = Nothing
+                       brParent = Nothing,
+                       brUniqueRef = uniqueRef
                      }
 
 -- | Return the current branch level starting from 1.
