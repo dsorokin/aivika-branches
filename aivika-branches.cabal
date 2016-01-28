@@ -1,6 +1,6 @@
 name:            aivika-branches
 version:         0.1
-synopsis:        Branches for the Aivika simulation library
+synopsis:        Branching discrete event simulation library
 description:
     This package extends the Aivika library with facilities for creating branches to forecast 
     the future behavior of the model within simulation. For example, it can be useful for 
