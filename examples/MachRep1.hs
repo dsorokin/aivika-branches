@@ -38,6 +38,9 @@ model =
            do upTime <-
                 liftParameter $
                 randomExponential meanUpTime
+              --
+              -- r <- liftSimulation $ newRef 10
+              --
               holdProcess upTime
               liftEvent $ 
                 modifyRef totalUpTime (+ upTime)
@@ -49,18 +52,49 @@ model =
 
      runProcessInStartTime machine
      runProcessInStartTime machine
+     
+     let maxLevel = 4
 
+     starttime' <- liftParameter starttime
+     stoptime'  <- liftParameter stoptime
+
+     let dt' = (stoptime' - starttime') / fromIntegral maxLevel
+     -- dt' <- liftParameter dt
+     
+     let forecast :: Double -> Event BrIO Double
+         forecast i =
+           do level <- liftComp branchLevel
+              if level <= maxLevel
+                then do t  <- liftDynamics time
+                        x1 <- futureEvent (t + dt') $ forecast (i - 1)
+                        x2 <- futureEvent (t + dt') $ forecast (i + 1)
+                        let x = (x1 + x2) / 2
+                        x `seq` return x 
+                else do t <- liftDynamics time
+                        x <- readRef totalUpTime
+                        return $ x / (2 * t)
+     
+     f <- runEventInStartTime $ forecast 0
+     
+     let upTimePropForecasted :: Event BrIO Double
+         upTimePropForecasted = return f
+     
      let upTimeProp =
            do x <- readRef totalUpTime
-              y <- liftDynamics time
-              return $ x / (2 * y)
+              t <- liftDynamics time
+              return $ x / (2 * t)
 
      return $
        results
        [resultSource
         "upTimeProp"
         "The long-run proportion of up time (~ 0.66)"
-        upTimeProp]
+        upTimeProp,
+        --
+        resultSource
+        "upTimePropForecasted"
+        "The forecasted long-run proption of up time"
+        upTimePropForecasted]
 
 main :: IO ()
 main =
