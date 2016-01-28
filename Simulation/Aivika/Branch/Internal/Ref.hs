@@ -58,8 +58,8 @@ newEmptyRef0 =
   Br $ \ps ->
   do rm <- newIORef M.empty
      wm <- mkWeakIORef rm $
-           trace ("fin newEmptyRef0: " ++ show (brId ps)) $
-           atomicModifyIORef rm $ \m -> (M.empty, ())
+           -- trace ("fin newEmptyRef0: " ++ show (brId ps)) $
+           return ()
      return Ref { refMap = rm,
                   refWeakMap = wm }
 
@@ -75,7 +75,8 @@ newRef0 a =
      ra <- newIORef a
      let !i  = brId ps
          !wm = refWeakMap r
-     mkWeakIORef (brUniqueRef ps) (trace ("fin newIORef0: " ++ show i) $ finalizeRef wm i)
+     -- mkWeakIORef (brUniqueRef ps) (trace ("fin newIORef0: " ++ show i) $ finalizeRef wm i)
+     mkWeakIORef (brUniqueRef ps) (finalizeRef wm i)
      writeIORef (refMap r) $
        M.insert i ra M.empty
      return r
@@ -107,7 +108,8 @@ writeRef r a =
        Nothing ->
          do ra <- a `seq` newIORef a
             let !wm = refWeakMap r
-            mkWeakIORef (brUniqueRef ps) (trace ("fin writeRef: " ++ show i) $ finalizeRef wm i)
+            -- mkWeakIORef (brUniqueRef ps) (trace ("fin writeRef: " ++ show i) $ finalizeRef wm i)
+            mkWeakIORef (brUniqueRef ps) (finalizeRef wm i)
             atomicModifyIORef (refMap r) $ \m ->
               let m' = M.insert i ra m in (m', ())
 
@@ -131,8 +133,7 @@ modifyRef r f =
 finalizeRef :: Weak (RefMap a) -> Int -> IO ()
 finalizeRef wm i =
   do rm <- deRefWeak wm
-     trace ("finalizeRef: " ++ show i) $
-       return ()
+     -- trace ("finalizeRef: " ++ show i) $ return ()
      case rm of
        Nothing ->
          return ()
