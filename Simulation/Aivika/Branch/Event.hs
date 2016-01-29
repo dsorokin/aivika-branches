@@ -9,8 +9,8 @@
 -- Stability  : experimental
 -- Tested with: GHC 7.10.3
 --
--- The module defines 'BrIO' as an instance of 'EventQueueing' and
--- it also defines basic functions for branching computations.
+-- The module defines an event queue, where 'BrIO' is an instance of 'EventQueueing'.
+-- Also it defines basic functions for branching computations.
 --
 module Simulation.Aivika.Branch.Event
        (branchEvent,
