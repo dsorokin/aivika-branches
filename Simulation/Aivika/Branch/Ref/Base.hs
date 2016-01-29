@@ -9,9 +9,10 @@
 -- Stability  : experimental
 -- Tested with: GHC 7.10.3
 --
--- The implementation of mutable references.
+-- Here is an implementation of mutable references, where
+-- 'BrIO' is an instance of 'MonadRef' and 'MonadRef0'.
 --
-module Simulation.Aivika.Branch.Ref.Base where
+module Simulation.Aivika.Branch.Ref.Base () where
 
 import Simulation.Aivika.Trans.Internal.Types
 import Simulation.Aivika.Trans.Comp
