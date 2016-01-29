@@ -2,9 +2,10 @@ name:            aivika-branches
 version:         0.1
 synopsis:        Branching discrete event simulation library
 description:
-    This package extends the Aivika library with facilities for creating branches to forecast 
-    the future behavior of the model within simulation. For example, it can be useful for 
-    financial modeling.
+    This package extends the Aivika [1] library with facilities for creating branches to run
+    nested simulations within simulation. For example, it can be useful for financial modeling.
+    .
+    \[1] <http://hackage.haskell.org/package/aivika-transformers>
     .
 category:        Simulation
 license:         BSD3
