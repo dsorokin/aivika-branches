@@ -9,7 +9,8 @@
 -- Stability  : experimental
 -- Tested with: GHC 7.10.3
 --
--- Below is defined a random number generator.
+-- Here is defined a random number generator,
+-- where 'BrIO' is an instance of 'MonadGenerator'.
 --
 module Simulation.Aivika.Branch.Generator () where
 
