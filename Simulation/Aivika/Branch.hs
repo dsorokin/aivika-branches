@@ -14,9 +14,11 @@ module Simulation.Aivika.Branch
         module Simulation.Aivika.Branch.Br,
         module Simulation.Aivika.Branch.Event,
         module Simulation.Aivika.Branch.Generator,
+        module Simulation.Aivika.Branch.QueueStrategy,
         module Simulation.Aivika.Branch.Ref.Base) where
 
 import Simulation.Aivika.Branch.Br
-import Simulation.Aivika.Branch.Generator
 import Simulation.Aivika.Branch.Event
+import Simulation.Aivika.Branch.Generator
+import Simulation.Aivika.Branch.QueueStrategy
 import Simulation.Aivika.Branch.Ref.Base
