@@ -18,6 +18,8 @@ cabal-version:   >= 1.6
 build-type:      Simple
 tested-with:     GHC == 7.10.3
 
+extra-source-files:  tests/MachRep1.hs
+
 library
 
     exposed-modules: Simulation.Aivika.Branch
