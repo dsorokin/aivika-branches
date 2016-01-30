@@ -1,4 +1,6 @@
 
+{-# LANGUAGE RecursiveDo #-}
+
 -- |
 -- Module     : Simulation.Aivika.Branch.Internal.Br
 -- Copyright  : Copyright (c) 2016, David Sorokin <david.sorokin@gmail.com>
@@ -24,6 +26,7 @@ import Data.Maybe
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Trans
+import Control.Monad.Fix
 import Control.Exception (throw, catch, finally)
 
 import Simulation.Aivika.Trans.Exception
@@ -76,6 +79,12 @@ instance MonadIO BrIO where
 
   {-# INLINE liftIO #-}
   liftIO = Br . const . liftIO
+
+instance MonadFix BrIO where
+
+  mfix f = 
+    Br $ \ps ->
+    do { rec { a <- invokeBr ps (f a) }; return a }
 
 instance MonadException BrIO where
 
