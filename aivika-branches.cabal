@@ -19,6 +19,8 @@ build-type:      Simple
 tested-with:     GHC == 7.10.3
 
 extra-source-files:  tests/MachRep1.hs
+                     tests/Furnace.hs
+                     tests/InspectionAdjustmentStations.hs
 
 library
 
