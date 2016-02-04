@@ -22,6 +22,7 @@ import System.Random
 import Data.IORef
 
 import Simulation.Aivika.Trans
+import Simulation.Aivika.Trans.Generator.Primitive
 import Simulation.Aivika.Branch.Internal.Br
 
 instance MonadGenerator BrIO where
@@ -37,7 +38,11 @@ instance MonadGenerator BrIO where
 
   generateUniformInt = generateUniformInt01 . generator01
 
+  generateTriangular = generateTriangular01 . generator01
+
   generateNormal = generateNormal01 . generatorNormal01
+
+  generateLogNormal = generateLogNormal01 . generatorNormal01
 
   generateExponential = generateExponential01 . generator01
 
@@ -46,6 +51,14 @@ instance MonadGenerator BrIO where
   generatePoisson = generatePoisson01 . generator01
 
   generateBinomial = generateBinomial01 . generator01
+
+  generateGamma g = generateGamma01 (generatorNormal01 g) (generator01 g)
+
+  generateBeta g = generateBeta01 (generatorNormal01 g) (generator01 g)
+
+  generateWeibull = generateWeibull01 . generator01
+
+  generateDiscrete = generateDiscrete01 . generator01
 
   newGenerator tp =
     case tp of
@@ -70,44 +83,6 @@ instance MonadGenerator BrIO where
     do gNormal01 <- newNormalGenerator01 g01
        return Generator { generator01 = g01,
                           generatorNormal01 = gNormal01 }
-
--- | Generate an uniform random number with the specified minimum and maximum.
-generateUniform01 :: BrIO Double
-                     -- ^ the generator
-                     -> Double
-                     -- ^ minimum
-                     -> Double
-                     -- ^ maximum
-                     -> BrIO Double
-generateUniform01 g min max =
-  do x <- g
-     return $ min + x * (max - min)
-
--- | Generate an uniform random number with the specified minimum and maximum.
-generateUniformInt01 :: BrIO Double
-                        -- ^ the generator
-                        -> Int
-                        -- ^ minimum
-                        -> Int
-                        -- ^ maximum
-                        -> BrIO Int
-generateUniformInt01 g min max =
-  do x <- g
-     let min' = fromIntegral min
-         max' = fromIntegral max
-     return $ round (min' + x * (max' - min'))
-
--- | Generate a normal random number by the specified generator, mean and variance.
-generateNormal01 :: BrIO Double
-                    -- ^ normal random numbers with mean 0 and variance 1
-                    -> Double
-                    -- ^ mean
-                    -> Double
-                    -- ^ variance
-                    -> BrIO Double
-generateNormal01 g mu nu =
-  do x <- g
-     return $ mu + nu * x
 
 -- | Create a normal random number generator with mean 0 and variance 1
 -- by the specified generator of uniform random numbers from 0 to 1.
@@ -148,63 +123,3 @@ newNormalGenerator01 g =
                     liftIO $ writeIORef flagRef True
                     liftIO $ writeIORef nextRef $ xi2 * psi
                     return $ xi1 * psi
-
--- | Return the exponential random number with the specified mean.
-generateExponential01 :: BrIO Double
-                         -- ^ the generator
-                         -> Double
-                         -- ^ the mean
-                         -> BrIO Double
-generateExponential01 g mu =
-  do x <- g
-     return (- log x * mu)
-
--- | Return the Erlang random number.
-generateErlang01 :: BrIO Double
-                    -- ^ the generator
-                    -> Double
-                    -- ^ the scale
-                    -> Int
-                    -- ^ the shape
-                    -> BrIO Double
-generateErlang01 g beta m =
-  do x <- loop m 1
-     return (- log x * beta)
-       where loop m acc
-               | m < 0     = error "Negative shape: generateErlang."
-               | m == 0    = return acc
-               | otherwise = do x <- g
-                                loop (m - 1) (x * acc)
-
--- | Generate the Poisson random number with the specified mean.
-generatePoisson01 :: BrIO Double
-                     -- ^ the generator
-                     -> Double
-                     -- ^ the mean
-                     -> BrIO Int
-generatePoisson01 g mu =
-  do prob0 <- g
-     let loop prob prod acc
-           | prob <= prod = return acc
-           | otherwise    = loop
-                            (prob - prod)
-                            (prod * mu / fromIntegral (acc + 1))
-                            (acc + 1)
-     loop prob0 (exp (- mu)) 0
-
--- | Generate a binomial random number with the specified probability and number of trials. 
-generateBinomial01 :: BrIO Double
-                      -- ^ the generator
-                      -> Double 
-                      -- ^ the probability
-                      -> Int
-                      -- ^ the number of trials
-                      -> BrIO Int
-generateBinomial01 g prob trials = loop trials 0 where
-  loop n acc
-    | n < 0     = error "Negative number of trials: generateBinomial."
-    | n == 0    = return acc
-    | otherwise = do x <- g
-                     if x <= prob
-                       then loop (n - 1) (acc + 1)
-                       else loop (n - 1) acc
