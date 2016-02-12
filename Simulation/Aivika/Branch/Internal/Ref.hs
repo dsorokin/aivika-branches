@@ -36,7 +36,7 @@ import Simulation.Aivika.Trans.Internal.Types
 import Simulation.Aivika.Branch.Internal.Br
 
 -- | A reference map.
-type RefMap a = IORef (M.IntMap (IORef a))
+type RefMap a = IORef (M.IntMap (IORef a, Weak (IORef ())))
 
 -- | A mutable reference.
 data Ref a = Ref { refMap :: RefMap a,
@@ -59,7 +59,7 @@ newEmptyRef0 =
   do rm <- newIORef M.empty
      wm <- mkWeakIORef rm $
            -- trace ("fin newEmptyRef0: " ++ show (brId ps)) $
-           return ()
+           finalizeRef rm
      return Ref { refMap = rm,
                   refWeakMap = wm }
 
@@ -75,10 +75,10 @@ newRef0 a =
      ra <- newIORef a
      let !i  = brId ps
          !wm = refWeakMap r
-     -- mkWeakIORef (brUniqueRef ps) (trace ("fin newIORef0: " ++ show i) $ finalizeRef wm i)
-     mkWeakIORef (brUniqueRef ps) (finalizeRef wm i)
+     -- mkWeakIORef (brUniqueRef ps) (trace ("fin newIORef0: " ++ show i) $ finalizeCell wm i)
+     wa <- mkWeakIORef (brUniqueRef ps) (finalizeCell wm i)
      writeIORef (refMap r) $
-       M.insert i ra M.empty
+       M.insert i (ra, wa) M.empty
      return r
      
 -- | Read the value of a reference.
@@ -89,7 +89,7 @@ readRef r =
   do m <- readIORef (refMap r)
      let loop ps =
            case M.lookup (brId ps) m of
-             Just ra -> readIORef ra
+             Just (ra, wa) -> readIORef ra
              Nothing ->
                case brParent ps of
                  Just ps' -> loop ps'
@@ -104,14 +104,14 @@ writeRef r a =
   do m <- readIORef (refMap r)
      let !i = brId ps
      case M.lookup i m of
-       Just ra -> a `seq` writeIORef ra a
+       Just (ra, wa) -> a `seq` writeIORef ra a
        Nothing ->
          do ra <- a `seq` newIORef a
             let !wm = refWeakMap r
-            -- mkWeakIORef (brUniqueRef ps) (trace ("fin writeRef: " ++ show i) $ finalizeRef wm i)
-            mkWeakIORef (brUniqueRef ps) (finalizeRef wm i)
+            -- mkWeakIORef (brUniqueRef ps) (trace ("fin writeRef: " ++ show i) $ finalizeCell wm i)
+            wa <- mkWeakIORef (brUniqueRef ps) (finalizeCell wm i)
             atomicModifyIORef (refMap r) $ \m ->
-              let m' = M.insert i ra m in (m', ())
+              let m' = M.insert i (ra, wa) m in (m', ())
 
 -- | Mutate the contents of the reference.
 modifyRef :: Ref a -> (a -> a) -> Event BrIO ()
@@ -121,7 +121,7 @@ modifyRef r f =
   do m <- readIORef (refMap r)
      let !i = brId ps
      case M.lookup i m of
-       Just ra ->
+       Just (ra, wa) ->
          do a <- readIORef ra
             let b = f a
             b `seq` writeIORef ra b
@@ -129,9 +129,16 @@ modifyRef r f =
          do a <- invokeBr ps $ invokeEvent p $ readRef r
             invokeBr ps $ invokeEvent p $ writeRef r (f a)
 
+-- | Finalize the reference.
+finalizeRef :: RefMap a -> IO ()
+finalizeRef r =
+  do m <- readIORef r
+     forM_ (M.elems m) $ \(ra, wa) ->
+       finalize wa
+
 -- | Finalize the reference cell by the specified branch identifier.
-finalizeRef :: Weak (RefMap a) -> Int -> IO ()
-finalizeRef wm i =
+finalizeCell :: Weak (RefMap a) -> Int -> IO ()
+finalizeCell wm i =
   do rm <- deRefWeak wm
      -- trace ("finalizeRef: " ++ show i) $ return ()
      case rm of
@@ -140,7 +147,7 @@ finalizeRef wm i =
        Just rm ->
          do m <- readIORef rm
             case M.lookup i m of
-              Just ra ->
+              Just (ra, wa) ->
                 atomicModifyIORef rm $ \m ->
                 let m' = M.delete i m in (m', ())
               Nothing ->
