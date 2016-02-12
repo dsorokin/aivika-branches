@@ -1,5 +1,5 @@
 name:            aivika-branches
-version:         0.1.1
+version:         0.1.2
 synopsis:        Branching discrete event simulation library
 description:
     This package extends the Aivika [1] library with facilities for creating branches to run
