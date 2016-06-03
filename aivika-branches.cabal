@@ -2,7 +2,7 @@ name:            aivika-branches
 version:         0.1.3
 synopsis:        Nested discrete event simulation library
 description:
-    This package extends the Aivika [1] library with facilities for creating branches to run
+    This package extends the aivika-transformers [1] library with facilities for creating branches to run
     nested simulations within simulation. For example, it can be useful for financial modeling.
     .
     \[1] <http://hackage.haskell.org/package/aivika-transformers>
