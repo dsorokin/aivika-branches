@@ -39,8 +39,8 @@ library
                      mtl >= 2.1.1,
                      containers >= 0.4.0.0,
                      random >= 1.0.0.3,
-                     aivika >= 4.3.2,
-                     aivika-transformers >= 4.3.2
+                     aivika >= 4.5,
+                     aivika-transformers >= 4.5
 
     extensions:      TypeFamilies,
                      MultiParamTypeClasses,

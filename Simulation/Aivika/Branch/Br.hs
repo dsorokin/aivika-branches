@@ -7,7 +7,7 @@
 -- Stability  : experimental
 -- Tested with: GHC 7.10.3
 --
--- This module defines 'BrIO' as an instance of the 'MonadDES' type class.
+-- This module defines 'BrIO' as an instance of the 'MonadDES' and 'EventIOQueueing' type classes.
 --
 module Simulation.Aivika.Branch.Br
        (BrIO,
@@ -31,3 +31,13 @@ import Simulation.Aivika.Branch.QueueStrategy
 instance MonadDES BrIO
 
 instance MonadComp BrIO
+
+-- | An implementation of the 'EventIOQueueing' type class.
+instance EventIOQueueing BrIO where
+
+  enqueueEventIO = enqueueEvent
+  enqueueEventIOWithStartTime = enqueueEventWithStartTime
+  enqueueEventIOWithStopTime = enqueueEventWithStopTime
+  enqueueEventIOWithTimes = enqueueEventWithTimes
+  enqueueEventIOWithIntegTimes = enqueueEventWithIntegTimes
+  
