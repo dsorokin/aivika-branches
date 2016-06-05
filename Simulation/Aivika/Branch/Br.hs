@@ -36,8 +36,4 @@ instance MonadComp BrIO
 instance EventIOQueueing BrIO where
 
   enqueueEventIO = enqueueEvent
-  enqueueEventIOWithStartTime = enqueueEventWithStartTime
-  enqueueEventIOWithStopTime = enqueueEventWithStopTime
-  enqueueEventIOWithTimes = enqueueEventWithTimes
-  enqueueEventIOWithIntegTimes = enqueueEventWithIntegTimes
   
