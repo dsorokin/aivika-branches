@@ -1,15 +1,15 @@
 
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeFamilies, FlexibleInstances #-}
 
 -- |
 -- Module     : Simulation.Aivika.Branch.Event
--- Copyright  : Copyright (c) 2016, David Sorokin <david.sorokin@gmail.com>
+-- Copyright  : Copyright (c) 2016-2017, David Sorokin <david.sorokin@gmail.com>
 -- License    : BSD3
 -- Maintainer : David Sorokin <david.sorokin@gmail.com>
 -- Stability  : experimental
 -- Tested with: GHC 7.10.3
 --
--- The module defines an event queue, where 'BrIO' is an instance of 'EventQueueing'.
+-- The module defines an event queue, where 'BR' can be an instance of 'EventQueueing'.
 -- Also it defines basic functions for branching computations.
 --
 module Simulation.Aivika.Branch.Event
@@ -27,14 +27,14 @@ import qualified Simulation.Aivika.PriorityQueue.Pure as PQ
 import Simulation.Aivika.Trans
 import Simulation.Aivika.Trans.Internal.Types
 
-import Simulation.Aivika.Branch.Internal.Br
+import Simulation.Aivika.Branch.Internal.BR
 
 -- | An implementation of the 'EventQueueing' type class.
-instance EventQueueing BrIO where
+instance EventQueueing (BR IO) where
 
   -- | The event queue type.
-  data EventQueue BrIO =
-    EventQueue { queuePQ :: IORef (PQ.PriorityQueue (Point BrIO -> BrIO ())),
+  data EventQueue (BR IO) =
+    EventQueue { queuePQ :: IORef (PQ.PriorityQueue (Point (BR IO) -> BR IO ())),
                  -- ^ the underlying priority queue
                  queueBusy :: IORef Bool,
                  -- ^ whether the queue is currently processing events
@@ -52,7 +52,7 @@ instance EventQueueing BrIO where
 
   enqueueEvent t (Event m) =
     Event $ \p ->
-    Br $ \ps ->
+    BR $ \ps ->
     let pq = queuePQ $ runEventQueue $ pointRun p
     in modifyIORef pq $ \x -> PQ.enqueue x t m
 
@@ -63,15 +63,15 @@ instance EventQueueing BrIO where
 
   eventQueueCount =
     Event $ \p ->
-    Br $ \ps ->
+    BR $ \ps ->
     let pq = queuePQ $ runEventQueue $ pointRun p
     in fmap PQ.queueCount $ readIORef pq
 
 -- | Process the pending events.
-processPendingEventsCore :: Bool -> Dynamics BrIO ()
+processPendingEventsCore :: Bool -> Dynamics (BR IO) ()
 processPendingEventsCore includingCurrentEvents = Dynamics r where
   r p =
-    Br $ \ps ->
+    BR $ \ps ->
     do let q = runEventQueue $ pointRun p
            f = queueBusy q
        f' <- readIORef f
@@ -97,17 +97,17 @@ processPendingEventsCore includingCurrentEvents = Dynamics r where
                      t0 = spcStartTime sc
                      dt = spcDT sc
                      n2 = fromIntegral $ floor ((t2 - t0) / dt)
-                 invokeBr ps $
+                 invokeBR ps $
                    c2 $ p { pointTime = t2,
                             pointIteration = n2,
                             pointPhase = -1 }
                  call q p ps
 
 -- | Process the pending events synchronously, i.e. without past.
-processPendingEvents :: Bool -> Dynamics BrIO ()
+processPendingEvents :: Bool -> Dynamics (BR IO) ()
 processPendingEvents includingCurrentEvents = Dynamics r where
   r p =
-    Br $ \ps ->
+    BR $ \ps ->
     do let q = runEventQueue $ pointRun p
            t = queueTime q
        t' <- readIORef t
@@ -115,28 +115,28 @@ processPendingEvents includingCurrentEvents = Dynamics r where
          then error $
               "The current time is less than " ++
               "the time in the queue: processPendingEvents"
-         else invokeBr ps $
+         else invokeBR ps $
               invokeDynamics p $
               processPendingEventsCore includingCurrentEvents
 
 -- | A memoized value.
-processEventsIncludingCurrent :: Dynamics BrIO ()
+processEventsIncludingCurrent :: Dynamics (BR IO) ()
 processEventsIncludingCurrent = processPendingEvents True
 
 -- | A memoized value.
-processEventsIncludingEarlier :: Dynamics BrIO ()
+processEventsIncludingEarlier :: Dynamics (BR IO) ()
 processEventsIncludingEarlier = processPendingEvents False
 
 -- | A memoized value.
-processEventsIncludingCurrentCore :: Dynamics BrIO ()
+processEventsIncludingCurrentCore :: Dynamics (BR IO) ()
 processEventsIncludingCurrentCore = processPendingEventsCore True
 
 -- | A memoized value.
-processEventsIncludingEarlierCore :: Dynamics BrIO ()
+processEventsIncludingEarlierCore :: Dynamics (BR IO) ()
 processEventsIncludingEarlierCore = processPendingEventsCore True
 
 -- | Process the events.
-processEvents :: EventProcessing -> Dynamics BrIO ()
+processEvents :: EventProcessing -> Dynamics (BR IO) ()
 processEvents CurrentEvents = processEventsIncludingCurrent
 processEvents EarlierEvents = processEventsIncludingEarlier
 processEvents CurrentEventsOrFromPast = processEventsIncludingCurrentCore
@@ -150,13 +150,13 @@ processEvents EarlierEventsOrFromPast = processEventsIncludingEarlierCore
 -- The state of the current computation including its event queue and mutable references 'Ref'
 -- remain intact. In some sense we copy the state of the model to the derivative branch and then
 -- proceed with the derived simulation. The copying operation is relatively cheap.
-branchEvent :: Event BrIO a -> Event BrIO a
+branchEvent :: Event (BR IO) a -> Event (BR IO) a
 branchEvent (Event m) =
   Event $ \p ->
-  Br $ \ps->
+  BR $ \ps->
   do p2  <- clonePoint p
-     ps2 <- newBrParams ps
-     invokeBr ps2 (m p2)
+     ps2 <- newBRParams ps
+     invokeBR ps2 (m p2)
 
 -- | Branch a new computation and return its result at the desired time
 -- in the future leaving the current computation intact.
@@ -168,18 +168,18 @@ branchEvent (Event m) =
 -- The state of the current computation including its event queue and mutable references 'Ref'
 -- remain intact. In some sense we copy the state of the model to the derivative branch and then
 -- proceed with the derived simulation. The copying operation is relatively cheap.
-futureEvent :: Double -> Event BrIO a -> Event BrIO a
+futureEvent :: Double -> Event (BR IO) a -> Event (BR IO) a
 futureEvent = futureEventWith CurrentEvents
 
 -- | Like 'futureEvent' but allows specifying how the pending events must be processed.
-futureEventWith :: EventProcessing -> Double -> Event BrIO a -> Event BrIO a
+futureEventWith :: EventProcessing -> Double -> Event (BR IO) a -> Event (BR IO) a
 futureEventWith processing t (Event m) =
   Event $ \p ->
-  Br $ \ps ->
+  BR $ \ps ->
   do when (t < pointTime p) $
        error "The specified time is less than the current modeling time: futureEventWith"
      p2  <- clonePoint p
-     ps2 <- newBrParams ps
+     ps2 <- newBRParams ps
      let sc = pointSpecs p
          t0 = spcStartTime sc
          t' = spcStopTime sc
@@ -188,13 +188,13 @@ futureEventWith processing t (Event m) =
          p' = p2 { pointTime = t,
                    pointIteration = n,
                    pointPhase = -1 }
-     invokeBr ps2 $
+     invokeBR ps2 $
        invokeDynamics p' $
        processEvents processing
-     invokeBr ps2 (m p')
+     invokeBR ps2 (m p')
 
 -- | Clone the time point.
-clonePoint :: Point BrIO -> IO (Point BrIO)
+clonePoint :: Point (BR IO) -> IO (Point (BR IO))
 clonePoint p =
   do let r = pointRun p
          q = runEventQueue r

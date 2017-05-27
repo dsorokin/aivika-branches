@@ -1,16 +1,16 @@
 
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeFamilies, FlexibleInstances #-}
 
 -- |
 -- Module     : Simulation.Aivika.Branch.Generator
--- Copyright  : Copyright (c) 2016, David Sorokin <david.sorokin@gmail.com>
+-- Copyright  : Copyright (c) 2016-2017, David Sorokin <david.sorokin@gmail.com>
 -- License    : BSD3
 -- Maintainer : David Sorokin <david.sorokin@gmail.com>
 -- Stability  : experimental
 -- Tested with: GHC 7.10.3
 --
 -- Here is defined a random number generator,
--- where 'BrIO' is an instance of 'MonadGenerator'.
+-- where 'BR' can be an instance of 'MonadGenerator'.
 --
 module Simulation.Aivika.Branch.Generator () where
 
@@ -23,15 +23,17 @@ import Data.IORef
 
 import Simulation.Aivika.Trans
 import Simulation.Aivika.Trans.Generator.Primitive
-import Simulation.Aivika.Branch.Internal.Br
+import Simulation.Aivika.Branch.Internal.BR
 
-instance MonadGenerator BrIO where
+instance MonadGenerator (BR IO) where
 
-  data Generator BrIO =
-    Generator { generator01 :: BrIO Double,
+  data Generator (BR IO) =
+    Generator { generator01 :: BR IO Double,
                 -- ^ the generator of uniform numbers from 0 to 1
-                generatorNormal01 :: BrIO Double
+                generatorNormal01 :: BR IO Double,
                 -- ^ the generator of normal numbers with mean 0 and variance 1
+                generatorSequenceNo :: BR IO Int
+                -- ^ the generator of sequence numbers
               }
 
   generateUniform = generateUniform01 . generator01
@@ -60,6 +62,8 @@ instance MonadGenerator BrIO where
 
   generateDiscrete = generateDiscrete01 . generator01
 
+  generateSequenceNo = generatorSequenceNo
+
   newGenerator tp =
     case tp of
       SimpleGenerator ->
@@ -81,14 +85,20 @@ instance MonadGenerator BrIO where
 
   newRandomGenerator01 g01 =
     do gNormal01 <- newNormalGenerator01 g01
+       gSeqNoRef <- liftIO $ newIORef 0
+       let gSeqNo =
+             do x <- liftIO $ readIORef gSeqNoRef
+                liftIO $ modifyIORef' gSeqNoRef (+1)
+                return x
        return Generator { generator01 = g01,
-                          generatorNormal01 = gNormal01 }
+                          generatorNormal01 = gNormal01,
+                          generatorSequenceNo = gSeqNo }
 
 -- | Create a normal random number generator with mean 0 and variance 1
 -- by the specified generator of uniform random numbers from 0 to 1.
-newNormalGenerator01 :: BrIO Double
+newNormalGenerator01 :: BR IO Double
                         -- ^ the generator
-                        -> BrIO (BrIO Double)
+                        -> BR IO (BR IO Double)
 newNormalGenerator01 g =
   do nextRef <- liftIO $ newIORef 0.0
      flagRef <- liftIO $ newIORef False

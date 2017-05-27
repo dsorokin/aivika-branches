@@ -1,15 +1,15 @@
 
-{-# LANGUAGE TypeFamilies, MultiParamTypeClasses #-}
+{-# LANGUAGE TypeFamilies, MultiParamTypeClasses, FlexibleInstances #-}
 
 -- |
 -- Module     : Simulation.Aivika.Branch.QueueStrategy
--- Copyright  : Copyright (c) 2016, David Sorokin <david.sorokin@gmail.com>
+-- Copyright  : Copyright (c) 2016-2017, David Sorokin <david.sorokin@gmail.com>
 -- License    : BSD3
 -- Maintainer : David Sorokin <david.sorokin@gmail.com>
 -- Stability  : experimental
 -- Tested with: GHC 7.10.3
 --
--- This module defines queue strategies 'FCFS' and 'LCFS' for the 'BrIO' computation.
+-- This module defines queue strategies 'FCFS' and 'LCFS' for the 'BR' computation.
 --
 module Simulation.Aivika.Branch.QueueStrategy () where
 
@@ -18,21 +18,21 @@ import Control.Monad.Trans
 import Simulation.Aivika.Trans
 import qualified Simulation.Aivika.Trans.DoubleLinkedList as LL
 
-import Simulation.Aivika.Branch.Internal.Br
+import Simulation.Aivika.Branch.Internal.BR
 import Simulation.Aivika.Branch.Ref.Base
 
 -- | An implementation of the 'FCFS' queue strategy.
-instance QueueStrategy BrIO FCFS where
+instance QueueStrategy (BR IO) FCFS where
 
   -- | A queue used by the 'FCFS' strategy.
-  newtype StrategyQueue BrIO FCFS a = FCFSQueue (LL.DoubleLinkedList BrIO a)
+  newtype StrategyQueue (BR IO) FCFS a = FCFSQueue (LL.DoubleLinkedList (BR IO) a)
 
   newStrategyQueue s = fmap FCFSQueue LL.newList
 
   strategyQueueNull (FCFSQueue q) = LL.listNull q
 
 -- | An implementation of the 'FCFS' queue strategy.
-instance DequeueStrategy BrIO FCFS where
+instance DequeueStrategy (BR IO) FCFS where
 
   strategyDequeue (FCFSQueue q) =
     do i <- LL.listFirst q
@@ -40,22 +40,22 @@ instance DequeueStrategy BrIO FCFS where
        return i
 
 -- | An implementation of the 'FCFS' queue strategy.
-instance EnqueueStrategy BrIO FCFS where
+instance EnqueueStrategy (BR IO) FCFS where
 
   strategyEnqueue (FCFSQueue q) i = LL.listAddLast q i
 
 -- | An implementation of the 'LCFS' queue strategy.
-instance QueueStrategy BrIO LCFS where
+instance QueueStrategy (BR IO) LCFS where
 
   -- | A queue used by the 'LCFS' strategy.
-  newtype StrategyQueue BrIO LCFS a = LCFSQueue (LL.DoubleLinkedList BrIO a)
+  newtype StrategyQueue (BR IO) LCFS a = LCFSQueue (LL.DoubleLinkedList (BR IO) a)
 
   newStrategyQueue s = fmap LCFSQueue LL.newList
        
   strategyQueueNull (LCFSQueue q) = LL.listNull q
 
 -- | An implementation of the 'LCFS' queue strategy.
-instance DequeueStrategy BrIO LCFS where
+instance DequeueStrategy (BR IO) LCFS where
 
   strategyDequeue (LCFSQueue q) =
     do i <- LL.listFirst q
@@ -63,6 +63,6 @@ instance DequeueStrategy BrIO LCFS where
        return i
 
 -- | An implementation of the 'LCFS' queue strategy.
-instance EnqueueStrategy BrIO LCFS where
+instance EnqueueStrategy (BR IO) LCFS where
 
   strategyEnqueue (LCFSQueue q) i = LL.listInsertFirst q i

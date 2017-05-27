@@ -2,8 +2,8 @@
 {-# LANGUAGE RecursiveDo #-}
 
 -- |
--- Module     : Simulation.Aivika.Branch.Internal.Br
--- Copyright  : Copyright (c) 2016, David Sorokin <david.sorokin@gmail.com>
+-- Module     : Simulation.Aivika.Branch.Internal.BR
+-- Copyright  : Copyright (c) 2016-2017, David Sorokin <david.sorokin@gmail.com>
 -- License    : BSD3
 -- Maintainer : David Sorokin <david.sorokin@gmail.com>
 -- Stability  : experimental
@@ -11,13 +11,13 @@
 --
 -- This module defines a branching computation.
 --
-module Simulation.Aivika.Branch.Internal.Br
-       (BrParams(..),
-        BrIO(..),
-        invokeBr,
-        runBr,
-        newBrParams,
-        newRootBrParams,
+module Simulation.Aivika.Branch.Internal.BR
+       (BRParams(..),
+        BR(..),
+        invokeBR,
+        runBR,
+        newBRParams,
+        newRootBRParams,
         branchLevel) where
 
 import Data.IORef
@@ -32,19 +32,19 @@ import Control.Exception (throw, catch, finally)
 import Simulation.Aivika.Trans.Exception
 
 -- | The branching computation.
-newtype BrIO a = Br { unBr :: BrParams -> IO a
+newtype BR m a = BR { unBR :: BRParams -> m a
                       -- ^ Unwrap the computation.
                     }
 
 -- | The parameters of the computation.
-data BrParams =
-  BrParams { brId :: !Int,
+data BRParams =
+  BRParams { brId :: !Int,
              -- ^ The branch identifier.
              brIdGenerator :: IORef Int,
              -- ^ The generator of identifiers.
              brLevel :: !Int,
              -- ^ The branch level.
-             brParent :: Maybe BrParams,
+             brParent :: Maybe BRParams,
              -- ^ The branch parent.
              brUniqueRef :: IORef ()
              -- ^ The unique reference to which
@@ -52,81 +52,87 @@ data BrParams =
              -- be garbage collected.
            }
 
-instance Monad BrIO where
+instance Monad m => Monad (BR m) where
 
   {-# INLINE return #-}
-  return = Br . const . return
+  return = BR . const . return
 
   {-# INLINE (>>=) #-}
-  (Br m) >>= k = Br $ \ps ->
+  (BR m) >>= k = BR $ \ps ->
     m ps >>= \a ->
-    let m' = unBr (k a) in m' ps
+    let m' = unBR (k a) in m' ps
 
-instance Applicative BrIO where
+instance Applicative m => Applicative (BR m) where
 
   {-# INLINE pure #-}
-  pure = return
+  pure = BR . const . pure
 
   {-# INLINE (<*>) #-}
-  (<*>) = ap
+  (BR f) <*> (BR m) = BR $ \ps -> f ps <*> m ps
 
-instance Functor BrIO where
+instance Functor m => Functor (BR m) where
 
   {-# INLINE fmap #-}
-  fmap f (Br m) = Br $ fmap f . m 
+  fmap f (BR m) = BR $ fmap f . m 
 
-instance MonadIO BrIO where
+instance MonadIO m => MonadIO (BR m) where
 
   {-# INLINE liftIO #-}
-  liftIO = Br . const . liftIO
+  liftIO = BR . const . liftIO
 
-instance MonadFix BrIO where
+instance MonadTrans BR where
+
+  {-# INLINE lift #-}
+  lift = BR . const
+
+instance MonadFix m => MonadFix (BR m) where
 
   mfix f = 
-    Br $ \ps ->
-    do { rec { a <- invokeBr ps (f a) }; return a }
+    BR $ \ps ->
+    do { rec { a <- invokeBR ps (f a) }; return a }
 
-instance MonadException BrIO where
+instance MonadException m => MonadException (BR m) where
 
-  catchComp (Br m) h = Br $ \ps ->
-    catch (m ps) (\e -> unBr (h e) ps)
+  catchComp (BR m) h = BR $ \ps ->
+    catchComp (m ps) (\e -> unBR (h e) ps)
 
-  finallyComp (Br m1) (Br m2) = Br $ \ps ->
-    finally (m1 ps) (m2 ps)
+  finallyComp (BR m1) (BR m2) = BR $ \ps ->
+    finallyComp (m1 ps) (m2 ps)
   
-  throwComp e = Br $ \ps ->
-    throw e
+  throwComp e = BR $ \ps ->
+    throwComp e
 
 -- | Invoke the computation.
-invokeBr :: BrParams -> BrIO a -> IO a
-{-# INLINE invokeBr #-}
-invokeBr ps (Br m) = m ps
+invokeBR :: BRParams -> BR m a -> m a
+{-# INLINE invokeBR #-}
+invokeBR ps (BR m) = m ps
 
 -- | Run the branching computation.
-runBr :: BrIO a -> IO a
-runBr m =
-  do ps <- newRootBrParams
-     unBr m ps
+runBR :: MonadIO m => BR m a -> m a
+{-# INLINABLE runBR #-}
+runBR m =
+  do ps <- liftIO newRootBRParams
+     unBR m ps
 
 -- | Create a new child branch.
-newBrParams :: BrParams -> IO BrParams
-newBrParams ps =
+newBRParams :: BRParams -> IO BRParams
+newBRParams ps =
   do id <- atomicModifyIORef (brIdGenerator ps) $ \a ->
        let b = a + 1 in b `seq` (b, b)
      let level = 1 + brLevel ps
      uniqueRef <- newIORef ()
-     return BrParams { brId = id,
+     return BRParams { brId = id,
                        brIdGenerator = brIdGenerator ps,
                        brLevel = level `seq` level,
                        brParent = Just ps,
                        brUniqueRef = uniqueRef }
 
 -- | Create a root branch.
-newRootBrParams :: IO BrParams
-newRootBrParams =
+newRootBRParams :: IO BRParams
+newRootBRParams =
   do genId <- newIORef 0
      uniqueRef <- newIORef ()
-     return BrParams { brId = 0,
+     return BRParams { brId = 0,
                        brIdGenerator = genId,
                        brLevel = 0,
                        brParent = Nothing,
@@ -134,5 +140,6 @@ newRootBrParams =
                      }
 
 -- | Return the current branch level starting from 0.
-branchLevel :: BrIO Int
-branchLevel = Br $ \ps -> return (brLevel ps)
+branchLevel :: Monad m => BR m Int
+{-# INLINABLE branchLevel #-}
+branchLevel = BR $ \ps -> return (brLevel ps)

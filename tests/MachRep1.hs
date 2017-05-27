@@ -30,7 +30,7 @@ specs = Specs { spcStartTime = 0.0,
                 spcMethod = RungeKutta4,
                 spcGeneratorType = SimpleGenerator }
         
-model :: Simulation BrIO (Results BrIO)
+model :: Simulation (BR IO) (Results (BR IO))
 model =
   do totalUpTime <- newRef 0.0
      
@@ -61,7 +61,7 @@ model =
      let dt' = (stoptime' - starttime') / fromIntegral maxLevel
      -- dt' <- liftParameter dt
      
-     let forecast :: Double -> Event BrIO Double
+     let forecast :: Double -> Event (BR IO) Double
          forecast i =
            do level <- liftComp branchLevel
               if level <= maxLevel
@@ -76,7 +76,7 @@ model =
      
      f <- runEventInStartTime $ forecast 0
      
-     let upTimePropForecasted :: Event BrIO Double
+     let upTimePropForecasted :: Event (BR IO) Double
          upTimePropForecasted = return f
      
      let upTimeProp =
@@ -98,7 +98,7 @@ model =
 
 main :: IO ()
 main =
-  runBr $
+  runBR $
   printSimulationResultsInStopTime
   printResultSourceInEnglish
   model specs

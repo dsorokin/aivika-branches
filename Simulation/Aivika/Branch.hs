@@ -1,7 +1,7 @@
 
 -- |
 -- Module     : Simulation.Aivika.Branch
--- Copyright  : Copyright (c) 2016, David Sorokin <david.sorokin@gmail.com>
+-- Copyright  : Copyright (c) 2016-2017, David Sorokin <david.sorokin@gmail.com>
 -- License    : BSD3
 -- Maintainer : David Sorokin <david.sorokin@gmail.com>
 -- Stability  : experimental
@@ -11,13 +11,13 @@
 --
 module Simulation.Aivika.Branch
        (-- * Modules
-        module Simulation.Aivika.Branch.Br,
+        module Simulation.Aivika.Branch.BR,
         module Simulation.Aivika.Branch.Event,
         module Simulation.Aivika.Branch.Generator,
         module Simulation.Aivika.Branch.QueueStrategy,
         module Simulation.Aivika.Branch.Ref.Base) where
 
-import Simulation.Aivika.Branch.Br
+import Simulation.Aivika.Branch.BR
 import Simulation.Aivika.Branch.Event
 import Simulation.Aivika.Branch.Generator
 import Simulation.Aivika.Branch.QueueStrategy

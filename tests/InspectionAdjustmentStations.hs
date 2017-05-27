@@ -23,7 +23,7 @@ import Simulation.Aivika.Trans
 import Simulation.Aivika.Trans.Queue.Infinite
 import Simulation.Aivika.Branch
 
-type DES = BrIO
+type DES = BR IO
 
 -- | The simulation specs.
 specs = Specs { spcStartTime = 0.0,
@@ -162,7 +162,7 @@ modelSummary :: Simulation DES (Results DES)
 modelSummary = fmap resultSummary model
 
 main =
-  runBr $
+  runBR $
   printSimulationResultsInStopTime
   printResultSourceInEnglish
   modelSummary specs
