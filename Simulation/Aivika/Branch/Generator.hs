@@ -17,6 +17,7 @@ module Simulation.Aivika.Branch.Generator () where
 import Control.Monad
 import Control.Monad.Trans
 
+import qualified System.Random.MWC as MWC
 import System.Random
 
 import Data.IORef
@@ -67,7 +68,10 @@ instance MonadGenerator (BR IO) where
   newGenerator tp =
     case tp of
       SimpleGenerator ->
-        liftIO newStdGen >>= newRandomGenerator
+        do let g = MWC.uniform <$>
+                   MWC.withSystemRandom (return :: MWC.GenIO -> IO MWC.GenIO)
+           g' <- liftIO g
+           newRandomGenerator01 (liftIO g')
       SimpleGeneratorWithSeed x ->
         error "Unsupported generator type SimpleGeneratorWithSeed: newGenerator"
       CustomGenerator g ->
