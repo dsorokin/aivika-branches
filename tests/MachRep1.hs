@@ -93,7 +93,7 @@ model =
         --
         resultSource
         "upTimePropForecasted"
-        "The forecasted long-run proption of up time"
+        "The forecasted long-run proportion of up time"
         upTimePropForecasted]
 
 main :: IO ()
